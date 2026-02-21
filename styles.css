@@ -1,0 +1,252 @@
+:root {
+  --bg: #0f172a;
+  --panel: #111b31;
+  --panel-soft: #16233f;
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --border: rgba(248, 250, 252, 0.14);
+  --shadow: 0 16px 30px rgba(3, 10, 25, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: radial-gradient(circle at top right, #1b2b4d 0%, var(--bg) 48%);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+  line-height: 1.5;
+}
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, #f8fafc, #94a3b8);
+  z-index: 999;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem clamp(1.2rem, 3vw, 3.4rem);
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.82);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand,
+h1,
+h2,
+h3 {
+  font-family: "Space Grotesk", Inter, sans-serif;
+}
+
+.brand {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+nav {
+  display: flex;
+  gap: clamp(0.7rem, 2vw, 2rem);
+}
+
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+nav a:hover {
+  color: var(--text);
+}
+
+main {
+  padding: 2rem clamp(1.2rem, 3vw, 4rem) 4rem;
+}
+
+.hero {
+  padding: clamp(4rem, 14vh, 8rem) 0 clamp(2.5rem, 9vh, 5rem);
+  max-width: 900px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.74rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+h1 {
+  margin: 0.9rem 0;
+  font-size: clamp(2.2rem, 6vw, 4.8rem);
+  line-height: 1.08;
+  max-width: 16ch;
+}
+
+.hero-subtext {
+  margin: 0;
+  font-size: clamp(1rem, 2.1vw, 1.32rem);
+  max-width: 60ch;
+  color: var(--muted);
+}
+
+.section {
+  margin-top: clamp(3.3rem, 8vh, 6rem);
+}
+
+.section-heading {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1.3rem;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.6vw, 2.5rem);
+}
+
+.case-grid,
+.stack-grid,
+.beyond-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.case-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.case-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(22, 35, 63, 0.82), rgba(17, 27, 49, 0.86));
+  box-shadow: var(--shadow);
+}
+
+.case-thumb {
+  min-height: 140px;
+  border-bottom: 1px solid var(--border);
+  background:
+    linear-gradient(120deg, rgba(148, 163, 184, 0.3), transparent 45%),
+    linear-gradient(30deg, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.4));
+}
+
+.case-body {
+  padding: 1rem;
+}
+
+.case-body h3,
+.stack-grid h3,
+.panel h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.case-body p,
+.stack-grid li,
+.panel li,
+.panel p {
+  color: var(--muted);
+}
+
+.stack-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.stack-grid article,
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(17, 27, 49, 0.84);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+
+ul {
+  padding-left: 1.2rem;
+  margin: 0.7rem 0 0;
+}
+
+.beyond {
+  margin-top: clamp(2.5rem, 8vh, 4.4rem);
+  padding-top: 0.4rem;
+}
+
+.beyond-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.mini-clips {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.mini-clips span {
+  font-size: 0.78rem;
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  color: #e2e8f0;
+}
+
+.footer {
+  margin-top: 4rem;
+  padding: 1.4rem clamp(1.2rem, 3vw, 4rem) 2rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.footer p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.footer-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.footer a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.footer a:hover {
+  border-bottom-color: var(--text);
+}
+
+@media (max-width: 640px) {
+  nav {
+    display: none;
+  }
+
+  main {
+    padding-top: 1rem;
+  }
+}
