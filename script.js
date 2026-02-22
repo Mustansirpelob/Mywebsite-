@@ -1,3 +1,4 @@
+
 const progressBar = document.querySelector('.scroll-progress');
 const parallaxElements = document.querySelectorAll('.parallax');
 

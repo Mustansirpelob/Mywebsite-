@@ -1,3 +1,4 @@
+
 const cartKey = 'zenithCart';
 
 function getCart() {
@@ -83,3 +84,4 @@ async function loadShopItems() {
 }
 
 loadShopItems();
+

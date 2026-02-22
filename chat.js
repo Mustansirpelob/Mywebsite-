@@ -1,6 +1,7 @@
 const chatLog = document.getElementById('chat-log');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
+codex/design-zenith-lab-portfolio-3bmkjo
 const clearBtn = document.getElementById('clear-btn');
 const exportBtn = document.getElementById('export-btn');
 const promptWrap = document.getElementById('quick-prompts');
@@ -82,3 +83,5 @@ exportBtn.addEventListener('click', () => {
 });
 
 renderMessages(readMessages());
+=======
+ main

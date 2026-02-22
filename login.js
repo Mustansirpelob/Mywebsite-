@@ -1,12 +1,15 @@
 const loginForm = document.getElementById('login-form');
 const statusLine = document.getElementById('login-status');
+
 const sessionPanel = document.getElementById('session-panel');
 const sessionSummary = document.getElementById('session-summary');
 const logoutBtn = document.getElementById('logout-btn');
 
+
 function isValidPassword(value) {
   return value.length >= 8;
 }
+
 
 function getSession() {
   const raw = localStorage.getItem('zenithSession');
@@ -41,23 +44,32 @@ function refreshSessionUI() {
   statusLine.textContent = `Authenticated as ${session.email}.`;
 }
 
+
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
 
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
+
   const remember = document.getElementById('remember').checked;
+
 
   if (!email || !isValidPassword(password)) {
     statusLine.textContent = 'Login failed: enter a valid email and at least 8 characters for password.';
     return;
   }
 
+
   const expiryHours = remember ? 24 * 14 : 12;
   const session = {
     email,
     loggedInAt: new Date().toISOString(),
     expiresAt: Date.now() + expiryHours * 60 * 60 * 1000
+
+  const session = {
+    email,
+    loggedInAt: new Date().toISOString()
+
   };
 
   localStorage.setItem('zenithSession', JSON.stringify(session));
@@ -65,6 +77,7 @@ loginForm.addEventListener('submit', (event) => {
 
   setTimeout(() => {
     window.location.href = 'chat.html';
+
   }, 800);
 });
 
@@ -74,3 +87,8 @@ logoutBtn.addEventListener('click', () => {
 });
 
 refreshSessionUI();
+
+  }, 900);
+});
+
+
