@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / 'database' / 'mini_ai.db'
@@ -22,6 +22,10 @@ ALIASES = {
 }
 
 
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 def init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
@@ -32,6 +36,25 @@ def init_db() -> None:
               question TEXT NOT NULL,
               answer TEXT NOT NULL,
               created_at TEXT NOT NULL
+            )
+            '''
+        )
+        conn.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS messages (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              sender TEXT NOT NULL,
+              text TEXT NOT NULL,
+              created_at TEXT NOT NULL
+            )
+            '''
+        )
+        conn.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS settings (
+              key TEXT PRIMARY KEY,
+              value TEXT NOT NULL,
+              updated_at TEXT NOT NULL
             )
             '''
         )
@@ -63,7 +86,7 @@ def learn(question: str, answer: str) -> None:
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             'INSERT INTO knowledge(question, answer, created_at) VALUES (?, ?, ?)',
-            (q, a, datetime.now(timezone.utc).isoformat()),
+            (q, a, now_iso()),
         )
         conn.commit()
 
@@ -111,8 +134,48 @@ def lookup(message: str) -> str | None:
     return None
 
 
+def add_message(sender: str, text: str) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute('INSERT INTO messages(sender, text, created_at) VALUES (?, ?, ?)', (sender, text, now_iso()))
+        conn.commit()
+
+
+def list_messages() -> list[dict]:
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute('SELECT id, sender, text, created_at FROM messages ORDER BY id ASC').fetchall()
+    return [{'id': r[0], 'sender': r[1], 'text': r[2], 'created_at': r[3]} for r in rows]
+
+
+def list_knowledge() -> list[dict]:
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute('SELECT id, question, answer, created_at FROM knowledge ORDER BY id DESC').fetchall()
+    return [{'id': r[0], 'question': r[1], 'answer': r[2], 'created_at': r[3]} for r in rows]
+
+
+def delete_knowledge(item_id: int) -> bool:
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.execute('DELETE FROM knowledge WHERE id = ?', (item_id,))
+        conn.commit()
+        return cur.rowcount > 0
+
+
+def get_setting(key: str, default: str = '') -> str:
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute('SELECT value FROM settings WHERE key = ?', (key,)).fetchone()
+    return row[0] if row else default
+
+
+def set_setting(key: str, value: str) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            'INSERT INTO settings(key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at',
+            (key, value, now_iso()),
+        )
+        conn.commit()
+
+
 class Handler(SimpleHTTPRequestHandler):
-    def _send_json(self, status: int, payload: dict) -> None:
+    def _send_json(self, status: int, payload: dict | list) -> None:
         body = json.dumps(payload).encode('utf-8')
         self.send_response(status)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -120,9 +183,37 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_GET(self) -> None:
+        parsed = urlparse(self.path)
+        if parsed.path == '/api/messages':
+            self._send_json(200, {'messages': list_messages()})
+            return
+        if parsed.path == '/api/knowledge':
+            self._send_json(200, {'items': list_knowledge()})
+            return
+        if parsed.path == '/api/settings':
+            self._send_json(200, {'announcement': get_setting('announcement')})
+            return
+        super().do_GET()
+
+    def do_DELETE(self) -> None:
+        parsed = urlparse(self.path)
+        if parsed.path != '/api/knowledge':
+            self._send_json(404, {'error': 'Not found'})
+            return
+
+        params = parse_qs(parsed.query)
+        item_id = params.get('id', [''])[0]
+        if not item_id.isdigit():
+            self._send_json(400, {'error': 'valid id required'})
+            return
+
+        ok = delete_knowledge(int(item_id))
+        self._send_json(200, {'ok': ok})
+
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path not in ('/api/chat', '/api/teach'):
+        if parsed.path not in ('/api/chat', '/api/teach', '/api/messages', '/api/settings'):
             self._send_json(404, {'error': 'Not found'})
             return
 
@@ -143,6 +234,22 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             learn(question, answer)
             self._send_json(200, {'ok': True, 'message': 'Learned new response.'})
+            return
+
+        if parsed.path == '/api/messages':
+            sender = str(payload.get('sender', '')).strip() or 'Unknown'
+            text = str(payload.get('text', '')).strip()
+            if not text:
+                self._send_json(400, {'error': 'text required'})
+                return
+            add_message(sender, text)
+            self._send_json(200, {'ok': True})
+            return
+
+        if parsed.path == '/api/settings':
+            announcement = str(payload.get('announcement', '')).strip()
+            set_setting('announcement', announcement)
+            self._send_json(200, {'ok': True, 'announcement': announcement})
             return
 
         message = str(payload.get('message', ''))

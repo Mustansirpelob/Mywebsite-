@@ -8,85 +8,78 @@ const teachQuestion = document.getElementById('teach-question');
 const teachAnswer = document.getElementById('teach-answer');
 const teachBtn = document.getElementById('teach-btn');
 
-const storageKey = 'zenithChatMessages';
+const apiCandidates = ['', 'http://127.0.0.1:4173', 'http://localhost:4173'];
+let pollHandle;
 
-const starterMessages = [
-  { who: 'Zenith Bot', text: 'Welcome! Ask me anything project-related. I can also be taught below.' }
-];
+async function postToApi(path, payload) {
+  for (const base of apiCandidates) {
+    try {
+      const res = await fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) continue;
+      return await res.json();
+    } catch {
+      // try next
+    }
+  }
+  throw new Error('api unreachable');
+}
 
-const apiCandidates = [
-  '',
-  'http://127.0.0.1:4173',
-  'http://localhost:4173'
-];
+async function getFromApi(path) {
+  for (const base of apiCandidates) {
+    try {
+      const res = await fetch(`${base}${path}`);
+      if (!res.ok) continue;
+      return await res.json();
+    } catch {
+      // try next
+    }
+  }
+  throw new Error('api unreachable');
+}
 
 function renderMessages(messages) {
   chatLog.innerHTML = '';
   messages.forEach((message) => {
     const line = document.createElement('p');
-    line.textContent = `${message.who}: ${message.text}`;
+    line.textContent = `${message.sender}: ${message.text}`;
     chatLog.appendChild(line);
   });
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-function readMessages() {
-  const stored = localStorage.getItem(storageKey);
-  if (!stored) return [...starterMessages];
-
+async function refreshMessages() {
   try {
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : [...starterMessages];
+    const data = await getFromApi('/api/messages');
+    renderMessages(data.messages || []);
   } catch {
-    return [...starterMessages];
+    renderMessages([{ sender: 'Zenith Bot', text: 'Server offline. Open http://127.0.0.1:4173/chat.html after starting python3 server.py.' }]);
   }
-}
-
-function persistMessages(messages) {
-  localStorage.setItem(storageKey, JSON.stringify(messages));
-}
-
-async function postToAi(path, payload) {
-  for (const base of apiCandidates) {
-    const url = `${base}${path}`;
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!response.ok) continue;
-      return await response.json();
-    } catch {
-      // try next candidate
-    }
-  }
-  throw new Error('AI server unreachable');
 }
 
 async function getAiReply(text) {
   try {
-    const data = await postToAi('/api/chat', { message: text });
+    const data = await postToApi('/api/chat', { message: text });
     return data.reply || 'I could not generate a response right now.';
   } catch {
-    return 'AI server unavailable. Open http://127.0.0.1:4173/chat.html after starting `python3 server.py`.';
+    return 'AI server unavailable. Open http://127.0.0.1:4173/chat.html after starting python3 server.py.';
   }
 }
 
 async function submitMessage(text) {
-  if (!text.trim()) return;
+  const clean = text.trim();
+  if (!clean) return;
 
-  const messages = readMessages();
-  messages.push({ who: 'You', text: text.trim() });
-  persistMessages(messages);
-  renderMessages(messages);
+  await postToApi('/api/messages', { sender: 'Client', text: clean });
   chatInput.value = '';
+  await refreshMessages();
 
-  const reply = await getAiReply(text);
-  const updated = readMessages();
-  updated.push({ who: 'Zenith Mini AI', text: reply });
-  persistMessages(updated);
-  renderMessages(updated);
+  const reply = await getAiReply(clean);
+  await postToApi('/api/messages', { sender: 'Zenith Mini AI', text: reply });
+  await refreshMessages();
 }
 
 sendBtn.addEventListener('click', () => submitMessage(chatInput.value));
@@ -98,9 +91,9 @@ promptWrap.querySelectorAll('[data-prompt]').forEach((button) => {
   button.addEventListener('click', () => submitMessage(button.dataset.prompt || ''));
 });
 
-clearBtn.addEventListener('click', () => {
-  persistMessages([...starterMessages]);
-  renderMessages(readMessages());
+clearBtn.addEventListener('click', async () => {
+  await postToApi('/api/messages', { sender: 'System', text: '--- Chat cleared by client ---' });
+  await refreshMessages();
 });
 
 teachBtn.addEventListener('click', async () => {
@@ -109,24 +102,20 @@ teachBtn.addEventListener('click', async () => {
   if (!question || !answer) return;
 
   try {
-    await postToAi('/api/teach', { question, answer });
+    await postToApi('/api/teach', { question, answer });
     teachQuestion.value = '';
     teachAnswer.value = '';
-    const messages = readMessages();
-    messages.push({ who: 'Zenith Bot', text: 'Thanks. I learned a new response.' });
-    persistMessages(messages);
-    renderMessages(messages);
+    await postToApi('/api/messages', { sender: 'Zenith Bot', text: 'Thanks. I learned a new response.' });
+    await refreshMessages();
   } catch {
-    const messages = readMessages();
-    messages.push({ who: 'Zenith Bot', text: 'Could not reach teaching endpoint. Open the site from http://127.0.0.1:4173/chat.html.' });
-    persistMessages(messages);
-    renderMessages(messages);
+    await postToApi('/api/messages', { sender: 'Zenith Bot', text: 'Could not reach teaching endpoint.' });
+    await refreshMessages();
   }
 });
 
-exportBtn.addEventListener('click', () => {
-  const messages = readMessages();
-  const payload = messages.map((message) => `${message.who}: ${message.text}`).join('\n');
+exportBtn.addEventListener('click', async () => {
+  const data = await getFromApi('/api/messages');
+  const payload = (data.messages || []).map((m) => `${m.sender}: ${m.text}`).join('\n');
   const blob = new Blob([payload], { type: 'text/plain' });
   const href = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
@@ -136,4 +125,6 @@ exportBtn.addEventListener('click', () => {
   URL.revokeObjectURL(href);
 });
 
-renderMessages(readMessages());
+refreshMessages();
+pollHandle = setInterval(refreshMessages, 3000);
+window.addEventListener('beforeunload', () => clearInterval(pollHandle));

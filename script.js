@@ -38,4 +38,27 @@ window.addEventListener('resize', updateScrollEffects);
 window.addEventListener('load', () => {
   updateScrollEffects();
   markSessionInNav();
+  loadAnnouncement();
 });
+
+
+async function loadAnnouncement() {
+  const banner = document.getElementById('announcement');
+  if (!banner) return;
+
+  const endpoints = ['', 'http://127.0.0.1:4173', 'http://localhost:4173'];
+  for (const base of endpoints) {
+    try {
+      const response = await fetch(`${base}/api/settings`);
+      if (!response.ok) continue;
+      const data = await response.json();
+      if (data.announcement) {
+        banner.hidden = false;
+        banner.textContent = data.announcement;
+      }
+      return;
+    } catch {
+      // next endpoint
+    }
+  }
+}

@@ -1,7 +1,7 @@
-:root {
+ :root {
   --bg: #0f172a;
-  --sky-top: #29559a;
-  --sky-bottom: #0f172a;
+  --sky-top: #6fa5df;
+  --sky-bottom: #102544;
   --text: #f8fafc;
   --muted: #d2deef;
   --border: rgba(255, 255, 255, 0.18);
@@ -17,11 +17,8 @@ body {
   font-family: Inter, system-ui, sans-serif;
   line-height: 1.5;
   background:
-    radial-gradient(ellipse at 20% 18%, rgba(255,255,255,0.25) 0 10%, transparent 30%),
-    radial-gradient(ellipse at 64% 12%, rgba(255,255,255,0.2) 0 11%, transparent 32%),
-    radial-gradient(ellipse at 82% 25%, rgba(255,255,255,0.18) 0 8%, transparent 30%),
-    linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
-  background-attachment: fixed;
+    linear-gradient(rgba(9, 16, 34, 0.55), rgba(9, 16, 34, 0.72)),
+    url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=2000&q=80') center/cover fixed no-repeat;
 }
 
 .scroll-progress { position: fixed; top: 0; left: 0; z-index: 999; width: 0; height: 3px; background: linear-gradient(90deg,#fff,#93c5fd); }
@@ -212,4 +209,35 @@ ul { margin: .6rem 0 0; padding-left: 1.1rem; }
 @media (max-width: 900px) {
   .teach-grid { grid-template-columns: 1fr; }
   .chat-controls { flex-wrap: wrap; }
+}
+
+
+.announcement {
+  margin: 0 auto 1rem;
+  max-width: 1100px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .75rem 1rem;
+  background: rgba(147, 197, 253, 0.18);
+  color: #e8f4ff;
+  box-shadow: var(--shadow);
+}
+
+.case-card,.panel,.stack-grid article,.table-shell,.chat-log,.status-line {
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(6px);
+}
+
+.owner-list {
+  margin-top: .8rem;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: .5rem;
+}
+.owner-list li {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .6rem;
+  background: rgba(15,23,42,.45);
 }
