@@ -1,12 +1,25 @@
 import json
+import re
 import sqlite3
 from datetime import datetime, timezone
+from difflib import SequenceMatcher
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / 'database' / 'mini_ai.db'
+
+ALIASES = {
+    'u': 'you',
+    'ur': 'your',
+    'r': 'are',
+    'im': 'i am',
+    'dont': 'do not',
+    'cant': 'can not',
+    'wanna': 'want to',
+    'gonna': 'going to',
+}
 
 
 def init_db() -> None:
@@ -26,7 +39,20 @@ def init_db() -> None:
 
 
 def normalize(text: str) -> str:
-    return ' '.join(text.lower().strip().split())
+    lowered = text.lower().strip()
+    cleaned = re.sub(r"[^a-z0-9\s]", ' ', lowered)
+    tokens = [ALIASES.get(token, token) for token in cleaned.split()]
+    expanded = ' '.join(tokens)
+    expanded = re.sub(r'\s+', ' ', expanded).strip()
+    return expanded
+
+
+def token_set(text: str) -> set[str]:
+    return set(normalize(text).split())
+
+
+def similarity(a: str, b: str) -> float:
+    return SequenceMatcher(None, a, b).ratio()
 
 
 def learn(question: str, answer: str) -> None:
@@ -61,9 +87,26 @@ def lookup(message: str) -> str | None:
     with sqlite3.connect(DB_PATH) as conn:
         rows = conn.execute('SELECT question, answer FROM knowledge ORDER BY id DESC').fetchall()
 
+    msg_tokens = token_set(msg)
+    best_answer = None
+    best_score = 0.0
+
     for question, answer in rows:
         if question in msg or msg in question:
             return answer
+
+        q_tokens = token_set(question)
+        overlap = len(msg_tokens & q_tokens)
+        overlap_ratio = overlap / max(len(q_tokens), 1)
+        sim = similarity(msg, question)
+        score = max(sim, overlap_ratio)
+
+        if score > best_score:
+            best_score = score
+            best_answer = answer
+
+    if best_answer and best_score >= 0.62:
+        return best_answer
 
     return None
 
