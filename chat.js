@@ -14,6 +14,12 @@ const starterMessages = [
   { who: 'Zenith Bot', text: 'Welcome! Ask me anything project-related. I can also be taught below.' }
 ];
 
+const apiCandidates = [
+  '',
+  'http://127.0.0.1:4173',
+  'http://localhost:4173'
+];
+
 function renderMessages(messages) {
   chatLog.innerHTML = '';
   messages.forEach((message) => {
@@ -40,19 +46,30 @@ function persistMessages(messages) {
   localStorage.setItem(storageKey, JSON.stringify(messages));
 }
 
+async function postToAi(path, payload) {
+  for (const base of apiCandidates) {
+    const url = `${base}${path}`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) continue;
+      return await response.json();
+    } catch {
+      // try next candidate
+    }
+  }
+  throw new Error('AI server unreachable');
+}
+
 async function getAiReply(text) {
   try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
-    });
-
-    if (!response.ok) throw new Error('AI service failed');
-    const data = await response.json();
+    const data = await postToAi('/api/chat', { message: text });
     return data.reply || 'I could not generate a response right now.';
   } catch {
-    return 'AI server unavailable. Start `python3 server.py` to enable learning replies.';
+    return 'AI server unavailable. Open http://127.0.0.1:4173/chat.html after starting `python3 server.py`.';
   }
 }
 
@@ -92,14 +109,7 @@ teachBtn.addEventListener('click', async () => {
   if (!question || !answer) return;
 
   try {
-    const response = await fetch('/api/teach', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, answer })
-    });
-
-    if (!response.ok) throw new Error('teach failed');
-
+    await postToAi('/api/teach', { question, answer });
     teachQuestion.value = '';
     teachAnswer.value = '';
     const messages = readMessages();
@@ -108,7 +118,7 @@ teachBtn.addEventListener('click', async () => {
     renderMessages(messages);
   } catch {
     const messages = readMessages();
-    messages.push({ who: 'Zenith Bot', text: 'Could not reach teaching endpoint. Start python server first.' });
+    messages.push({ who: 'Zenith Bot', text: 'Could not reach teaching endpoint. Open the site from http://127.0.0.1:4173/chat.html.' });
     persistMessages(messages);
     renderMessages(messages);
   }

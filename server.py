@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -37,7 +37,7 @@ def learn(question: str, answer: str) -> None:
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             'INSERT INTO knowledge(question, answer, created_at) VALUES (?, ?, ?)',
-            (q, a, datetime.utcnow().isoformat()),
+            (q, a, datetime.now(timezone.utc).isoformat()),
         )
         conn.commit()
 
