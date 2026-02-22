@@ -1,0 +1,7 @@
+# Local SQLite artifacts
+*.db
+*.sqlite
+*.sqlite3
+
+# Optional runtime logs
+*.log
