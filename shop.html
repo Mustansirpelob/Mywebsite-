@@ -1,1 +1,36 @@
- 
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zenith Lab | Shop</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header"><a class="brand" href="index.html">Zenith Lab</a><nav><a href="index.html">Home</a><a href="chat.html">Chat</a><a href="login.html">Login</a></nav></header>
+    <main class="page-shell">
+      <p class="eyebrow">Zenith Shop</p>
+      <h1>Digital Assets & Toolkits</h1>
+      <p class="hero-subtext">A curated store for premium templates, shader packs, and dev accelerators.</p>
+      <div class="shop-controls">
+        <input id="shop-search" type="search" placeholder="Search by item or category" />
+        <select id="shop-category">
+          <option value="all">All categories</option>
+        </select>
+      </div>
+      <table class="table-shell" id="shop-table">
+        <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Action</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <section class="panel cart-panel">
+        <h3>Quick Cart</h3>
+        <p class="hero-subtext">Stored locally so clients can shortlist assets before checkout.</p>
+        <ul id="cart-list"></ul>
+        <p id="cart-total" class="status-line">Total: $0.00</p>
+      </section>
+    </main>
+    <script src="shop.js"></script>
+  </body>
+</html>
+
