@@ -95,16 +95,6 @@ body {
   opacity: .78;
 }
 
-.mini-link {
-  display: inline-block;
-  margin-top: .55rem;
-  font-size: .8rem;
-  color: #cbe2ff;
-  text-decoration: none;
-}
-
-.mini-link:hover { text-decoration: underline; }
-
 .scroll-progress { position: fixed; top: 0; left: 0; z-index: 999; width: 0; height: 3px; background: linear-gradient(90deg,#fff,#93c5fd); }
 .site-header {
   position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
