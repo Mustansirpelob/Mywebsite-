@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Zenith Lab | Authentication</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -37,6 +38,48 @@
         <button class="button" type="submit">Create Account</button>
       </form>
 
+      <p id="login-status" class="status-line">Not authenticated.</p>
+    </main>
+
+
+    <title>Zenith Lab | Login</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header"><a class="brand" href="index.html">Zenith Lab</a><nav><a href="index.html">Home</a><a href="shop.html">Shop</a><a href="chat.html">Chat</a></nav></header>
+    <main class="page-shell narrow">
+      <p class="eyebrow">Secure Workspace</p>
+      <h1>Client Login</h1>
+      <p class="hero-subtext">Sign in to view milestones, files, and billing updates.</p>
+
+      <form id="login-form" class="panel form-grid">
+        <label>
+          Email
+          <input id="email" name="email" type="email" placeholder="client@company.com" required />
+        </label>
+        <label>
+          Password
+          <input id="password" name="password" type="password" minlength="8" placeholder="••••••••" required />
+        </label>
+
+        <label class="inline-check">
+          <input id="remember" name="remember" type="checkbox" />
+          Keep me signed in on this device
+        </label>
+        <button class="button" type="submit">Sign In</button>
+      </form>
+
+      <div id="session-panel" class="panel session-panel" hidden>
+        <h3>Active Session</h3>
+        <p id="session-summary"></p>
+        <button id="logout-btn" class="mini-button" type="button">Log Out</button>
+      </div>
+
+
+<button class="button" type="submit">Sign In</button>
+      </form>
+
+ main
       <p id="login-status" class="status-line">Not authenticated.</p>
     </main>
 
