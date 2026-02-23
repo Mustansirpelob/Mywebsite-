@@ -117,7 +117,6 @@ window.addEventListener('load', async () => {
   revealOnScroll();
   createParticles();
   await Promise.all([syncAuthUI(), loadAnnouncement()]);
-=======
 
 const progressBar = document.querySelector('.scroll-progress');
 const parallaxElements = document.querySelectorAll('.parallax');
