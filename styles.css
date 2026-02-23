@@ -17,8 +17,10 @@ body {
   font-family: Inter, system-ui, sans-serif;
   line-height: 1.5;
   background:
-    linear-gradient(rgba(9, 16, 34, 0.55), rgba(9, 16, 34, 0.72)),
-    url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=2000&q=80') center/cover fixed no-repeat;
+    linear-gradient(180deg, rgba(6, 14, 30, 0.50), rgba(6, 14, 30, 0.78)),
+    radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.16), transparent 32%),
+    radial-gradient(circle at 82% 20%, rgba(255, 255, 255, 0.12), transparent 35%),
+    url('https://images.unsplash.com/photo-1516541196182-6bdb0516ed27?auto=format&fit=crop&w=2200&q=80') center/cover fixed no-repeat;
 }
 
 .scroll-progress { position: fixed; top: 0; left: 0; z-index: 999; width: 0; height: 3px; background: linear-gradient(90deg,#fff,#93c5fd); }
