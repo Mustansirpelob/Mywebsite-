@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zenith Lab | Owner Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-gradient" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="site-header glass">
+      <a class="brand" href="index.html">Zenith Lab</a>
+      <nav class="main-nav"><a href="index.html">Home</a><a href="chat.html">Workspace</a></nav>
+    </header>
+
+    <main class="page-shell reveal is-visible">
+      <div id="owner-guard" class="glass panel">
+        <h1>Owner access required</h1>
+        <p>Login using owner Gmail/password from the authentication page.</p>
+        <a class="button" href="login.html">Go to Login</a>
+      </div>
+
+      <section id="owner-console" hidden>
+        <div class="section-heading"><p class="eyebrow">Owner Dashboard</p><h1>Control Center</h1></div>
+
+        <div class="feature-grid">
+          <article class="glass card"><h3>Total Users</h3><p id="metric-users">-</p></article>
+          <article class="glass card"><h3>Total Messages</h3><p id="metric-messages">-</p></article>
+          <article class="glass card"><h3>Knowledge Entries</h3><p id="metric-knowledge">-</p></article>
+        </div>
+
+        <section class="glass panel">
+          <h3>User Management</h3>
+          <ul id="user-list" class="owner-list"></ul>
+        </section>
+
+        <section class="glass panel">
+          <h3>AI Training Panel</h3>
+          <div class="teach-grid">
+            <input id="owner-question" type="text" placeholder="Question" />
+            <input id="owner-answer" type="text" placeholder="Answer" />
+            <button id="owner-teach" class="button" type="button">Teach</button>
+          </div>
+          <div class="teach-grid">
+            <input id="train-url" type="url" placeholder="https://example.com/article" />
+            <button id="train-url-btn" class="button subtle" type="button">Train from URL</button>
+          </div>
+          <ul id="knowledge-list" class="owner-list"></ul>
+        </section>
+
+        <section class="glass panel">
+          <h3>Homepage Content</h3>
+          <div class="teach-grid">
+            <input id="announcement-input" type="text" placeholder="Announcement text" />
+            <button id="save-announcement" class="button" type="button">Save</button>
+          </div>
+          <button id="owner-logout" class="button subtle" type="button">Logout</button>
+        </section>
+      </section>
+
+      <p id="owner-status" class="status-line">Checking authentication...</p>
+    </main>
+
+    <script src="owner.js"></script>
+  </body>
+</html>
