@@ -3,37 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zenith Lab | Chat</title>
+    <title>Zenith Lab | Client Workspace</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="site-header"><a class="brand" href="index.html">Zenith Lab</a><nav><a href="index.html">Home</a><a href="shop.html">Shop</a><a href="login.html">Login</a></nav></header>
+    <header class="site-header"><a class="brand" href="index.html">Zenith Lab</a><nav><a href="index.html">Home</a><a href="login.html">Client Login</a></nav></header>
     <main class="page-shell">
       <p class="eyebrow">Client Workspace</p>
-      <h1>Project Chat + Mini AI</h1>
-      <p class="hero-subtext">Chat with Zenith Mini AI. It can learn replies from your custom Q/A training.</p>
+      <h1>Project Conversation</h1>
+      <p class="hero-subtext">Message the studio and get an immediate professional response from Zenith Mini AI.</p>
       <section class="chat-log" id="chat-log"></section>
       <div class="quick-prompts" id="quick-prompts">
-        <button type="button" data-prompt="Can we review milestones?">Milestones</button>
-        <button type="button" data-prompt="Please share latest invoice status.">Invoices</button>
-        <button type="button" data-prompt="What is in your shop?">Shop</button>
+        <button type="button" data-prompt="Can we schedule a discovery call?">Discovery Call</button>
+        <button type="button" data-prompt="Can you share your proposal timeline?">Proposal Timeline</button>
+        <button type="button" data-prompt="What services do you offer?">Services</button>
       </div>
       <div class="chat-controls">
-        <input id="chat-input" type="text" placeholder="Ask something..." />
+        <input id="chat-input" type="text" placeholder="Write your message" />
         <button id="send-btn" type="button">Send</button>
         <button id="clear-btn" type="button">Clear</button>
       </div>
-
-      <section class="panel teach-panel">
-        <h3>Teach Mini AI</h3>
-        <p class="hero-subtext">Add a new question + answer pair. The Python backend stores it in SQLite.</p>
-        <div class="teach-grid">
-          <input id="teach-question" type="text" placeholder="Question (e.g. what stack do you use?)" />
-          <input id="teach-answer" type="text" placeholder="Answer" />
-          <button id="teach-btn" class="mini-button" type="button">Teach</button>
-        </div>
-      </section>
-
       <button id="export-btn" class="mini-button" type="button">Export Transcript</button>
     </main>
     <script src="chat.js"></script>

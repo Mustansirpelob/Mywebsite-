@@ -21,26 +21,16 @@ function markSessionInNav() {
   try {
     const session = JSON.parse(sessionRaw);
     const nav = document.querySelector('.site-header nav');
-
     if (!nav || !session?.email) return;
 
     const badge = document.createElement('span');
     badge.className = 'session-badge';
-    badge.textContent = `${session.email}`;
+    badge.textContent = session.email;
     nav.appendChild(badge);
   } catch {
     localStorage.removeItem('zenithSession');
   }
 }
-
-window.addEventListener('scroll', updateScrollEffects, { passive: true });
-window.addEventListener('resize', updateScrollEffects);
-window.addEventListener('load', () => {
-  updateScrollEffects();
-  markSessionInNav();
-  loadAnnouncement();
-});
-
 
 async function loadAnnouncement() {
   const banner = document.getElementById('announcement');
@@ -58,7 +48,22 @@ async function loadAnnouncement() {
       }
       return;
     } catch {
-      // next endpoint
+      // next
     }
   }
 }
+
+function showOwnerEditButton() {
+  const link = document.getElementById('owner-edit-link');
+  if (!link) return;
+  if (localStorage.getItem('zenithOwnerToken')) link.hidden = false;
+}
+
+window.addEventListener('scroll', updateScrollEffects, { passive: true });
+window.addEventListener('resize', updateScrollEffects);
+window.addEventListener('load', () => {
+  updateScrollEffects();
+  markSessionInNav();
+  loadAnnouncement();
+  showOwnerEditButton();
+});

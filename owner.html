@@ -3,42 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zenith Lab | Owner Console</title>
+    <title>Zenith Lab | Owner Access</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="site-header"><a class="brand" href="index.html">Zenith Lab</a><nav><a href="index.html">Home</a><a href="chat.html">Client Chat</a><a href="shop.html">Shop</a></nav></header>
-    <main class="page-shell">
-      <p class="eyebrow">Owner Mode</p>
-      <h1>Owner Console</h1>
-      <p class="hero-subtext">Reply to clients, train Mini AI, and update homepage announcement.</p>
+    <main class="page-shell narrow owner-shell">
+      <p class="eyebrow">Owner Access</p>
+      <h1>Website Control Panel</h1>
+      <p class="hero-subtext">Sign in with owner Gmail + password to edit studio content.</p>
 
-      <section class="panel">
-        <h3>Live Client Conversation</h3>
-        <section class="chat-log" id="owner-chat-log"></section>
-        <div class="chat-controls">
-          <input id="owner-reply" type="text" placeholder="Reply as Owner" />
-          <button id="owner-send" type="button">Send Reply</button>
-        </div>
+      <form id="owner-login-form" class="panel form-grid">
+        <label>Owner Gmail<input id="owner-email" type="email" placeholder="owner@zenithlab.dev" required /></label>
+        <label>Password<input id="owner-password" type="password" placeholder="••••••••" required /></label>
+        <button class="button" type="submit">Sign In as Owner</button>
+      </form>
+
+      <section id="owner-console" class="owner-console" hidden>
+        <section class="panel">
+          <h3>Live Client Conversation</h3>
+          <section class="chat-log" id="owner-chat-log"></section>
+          <div class="chat-controls">
+            <input id="owner-reply" type="text" placeholder="Reply as Owner" />
+            <button id="owner-send" type="button">Send Reply</button>
+          </div>
+        </section>
+
+        <section class="panel teach-panel">
+          <h3>AI Knowledge Manager</h3>
+          <div class="teach-grid">
+            <input id="owner-question" type="text" placeholder="Question to learn" />
+            <input id="owner-answer" type="text" placeholder="Answer" />
+            <button id="owner-teach" class="mini-button" type="button">Add</button>
+          </div>
+          <ul id="knowledge-list" class="owner-list"></ul>
+        </section>
+
+        <section class="panel teach-panel">
+          <h3>Homepage Announcement</h3>
+          <div class="teach-grid">
+            <input id="announcement-input" type="text" placeholder="Type announcement shown on homepage" />
+            <button id="save-announcement" class="mini-button" type="button">Save</button>
+          </div>
+          <button id="owner-logout" class="mini-button" type="button">Log Out</button>
+        </section>
       </section>
 
-      <section class="panel teach-panel">
-        <h3>AI Knowledge Manager</h3>
-        <div class="teach-grid">
-          <input id="owner-question" type="text" placeholder="Question to learn" />
-          <input id="owner-answer" type="text" placeholder="Answer" />
-          <button id="owner-teach" class="mini-button" type="button">Add</button>
-        </div>
-        <ul id="knowledge-list" class="owner-list"></ul>
-      </section>
-
-      <section class="panel teach-panel">
-        <h3>Homepage Announcement</h3>
-        <div class="teach-grid">
-          <input id="announcement-input" type="text" placeholder="Type announcement shown on homepage" />
-          <button id="save-announcement" class="mini-button" type="button">Save</button>
-        </div>
-      </section>
+      <p id="owner-status" class="status-line">Owner not authenticated.</p>
     </main>
     <script src="owner.js"></script>
   </body>

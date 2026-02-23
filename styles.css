@@ -241,3 +241,11 @@ ul { margin: .6rem 0 0; padding-left: 1.1rem; }
   padding: .6rem;
   background: rgba(15,23,42,.45);
 }
+
+.owner-shell { max-width: 920px; }
+.owner-console { display: grid; gap: 1rem; margin-top: 1rem; }
+
+@media (max-width: 700px) {
+  .site-header { gap: .5rem; }
+  .site-header .mini-button { display: none; }
+}
