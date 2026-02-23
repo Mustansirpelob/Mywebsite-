@@ -79,150 +79,31 @@ body {
   background: linear-gradient(180deg, rgba(43, 94, 148, 0.18), rgba(8, 16, 30, 0.9));
 }
 
-.anime-model,
-.cat-character {
-  position: absolute;
-  bottom: clamp(26px, 5vh, 54px);
-}
-
-.anime-model {
-  right: clamp(12%, 17vw, 26%);
-  width: 102px;
-  height: 230px;
-  animation: idleFloat 4.3s ease-in-out infinite;
-}
-
-.anime-model .head {
-  position: absolute;
-  width: 58px;
-  height: 58px;
-  top: 8px;
-  left: 22px;
-  border-radius: 45% 45% 48% 48%;
-  background: linear-gradient(180deg, #f3d4c3, #ddb39f);
-  box-shadow: 0 0 0 7px rgba(34, 55, 87, 0.38);
-}
-
-.anime-model .torso {
-  position: absolute;
-  width: 68px;
-  height: 90px;
-  top: 74px;
-  left: 18px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(24, 89, 150, 0.84), rgba(13, 50, 89, 0.9));
-}
-
-.anime-model .leg {
-  position: absolute;
-  width: 22px;
-  height: 74px;
-  bottom: 0;
-  border-radius: 14px;
-  background: rgba(20, 36, 66, 0.9);
-}
-
-.anime-model .leg.left { left: 26px; }
-.anime-model .leg.right { right: 26px; }
-
-.anime-model .arm {
-  position: absolute;
-  width: 14px;
-  height: 68px;
-  top: 84px;
-  left: 6px;
-  transform-origin: top center;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(228, 178, 156, 0.95), rgba(185, 125, 104, 0.95));
-  animation: petting 2.6s ease-in-out infinite;
-}
-
-.anime-model .arm.right {
-  left: auto;
-  right: 5px;
-  height: 58px;
-  animation: none;
-  transform: rotate(-14deg);
-}
-
-.cat-character {
-  right: clamp(7%, 10vw, 16%);
-  width: 96px;
-  height: 78px;
-  animation: catHop 2.6s ease-in-out infinite;
-}
-
-.cat-character .cat-body {
-  position: absolute;
-  width: 66px;
-  height: 42px;
-  left: 12px;
-  bottom: 16px;
-  border-radius: 46% 52% 43% 44%;
-  background: linear-gradient(180deg, #f8d7a4, #d49e62);
-}
-
-.cat-character .cat-head {
-  position: absolute;
-  width: 34px;
-  height: 30px;
-  left: 58px;
-  bottom: 32px;
-  border-radius: 45%;
-  background: linear-gradient(180deg, #f7d8ab, #dbab72);
-}
-
-.cat-character .cat-head::before,
-.cat-character .cat-head::after {
-  content: "";
-  position: absolute;
-  top: -9px;
-  width: 12px;
-  height: 12px;
-  background: #e4b47b;
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-}
-
-.cat-character .cat-head::before { left: 2px; }
-.cat-character .cat-head::after { right: 2px; }
-
-.cat-character .cat-tail {
-  position: absolute;
-  width: 36px;
-  height: 12px;
-  left: -4px;
-  bottom: 36px;
-  border-radius: 999px;
-  background: #d29d67;
-  transform-origin: right center;
-  animation: tailWag 0.95s ease-in-out infinite;
-}
 
 @keyframes cloudDrift {
   from { transform: translateX(0); }
   to { transform: translateX(138vw); }
 }
 
-@keyframes idleFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+.motion-accent img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-top: .4rem;
+  opacity: .78;
 }
 
-@keyframes petting {
-  0%, 100% { transform: rotate(24deg); }
-  50% { transform: rotate(58deg) translateX(5px); }
+.mini-link {
+  display: inline-block;
+  margin-top: .55rem;
+  font-size: .8rem;
+  color: #cbe2ff;
+  text-decoration: none;
 }
 
-@keyframes catHop {
-  0%, 100% { transform: translateY(0); }
-  46% { transform: translateY(-7px); }
-  62% { transform: translateY(0); }
-}
-
-@keyframes tailWag {
-  0%, 100% { transform: rotate(12deg); }
-  50% { transform: rotate(-18deg); }
-}
+.mini-link:hover { text-decoration: underline; }
 
 .scroll-progress { position: fixed; top: 0; left: 0; z-index: 999; width: 0; height: 3px; background: linear-gradient(90deg,#fff,#93c5fd); }
 .site-header {
@@ -374,16 +255,6 @@ ul { margin: .6rem 0 0; padding-left: 1.1rem; }
 @media (max-width: 700px) {
   nav { display:none; }
   .shop-controls { grid-template-columns: 1fr; }
-  .anime-model {
-    right: 16%;
-    transform: scale(0.86);
-    transform-origin: bottom right;
-  }
-  .cat-character {
-    right: 4%;
-    transform: scale(0.82);
-    transform-origin: bottom right;
-  }
 }
 
 
