@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zenith Lab | AI Workspace</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-gradient" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="site-header glass">
+      <a class="brand" href="index.html">Zenith Lab</a>
+      <nav class="main-nav"><a href="index.html">Home</a><a href="login.html">Login</a></nav>
+    </header>
+
+    <main class="page-shell reveal is-visible">
+      <div class="section-heading"><p class="eyebrow">AI Workspace</p><h1>Client + AI Collaboration</h1></div>
+      <div class="model-status"><span class="dot"></span><span id="model-status-text">Model Status: Online</span></div>
+      <section class="chat-log glass" id="chat-log"></section>
+      <div class="chat-controls glass">
+        <input id="chat-input" type="text" placeholder="Ask about project timelines, pricing, or delivery..." />
+        <button id="send-btn" class="button" type="button">Send</button>
+      </div>
+    </main>
+
+    <script src="chat.js"></script>
+  </body>
+</html>

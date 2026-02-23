@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zenith Lab | Authentication</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-gradient" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="site-header glass">
+      <a class="brand" href="index.html">Zenith Lab</a>
+      <nav class="main-nav"><a href="index.html">Home</a><a href="chat.html">AI Workspace</a></nav>
+    </header>
+
+    <main class="page-shell narrow reveal is-visible">
+      <p class="eyebrow">Authentication</p>
+      <h1>Secure account access</h1>
+      <p class="hero-subtext">Clients can register/login. Owner uses dedicated Gmail and password with role-based dashboard access.</p>
+
+      <div class="auth-tabs">
+        <button id="show-login" class="button subtle" type="button">Login</button>
+        <button id="show-register" class="button subtle" type="button">Register</button>
+      </div>
+
+      <form id="login-form" class="glass form-grid">
+        <label>Email<input id="login-email" type="email" required /></label>
+        <label>Password<input id="login-password" type="password" minlength="8" required /></label>
+        <button class="button" type="submit">Sign In</button>
+      </form>
+
+      <form id="register-form" class="glass form-grid" hidden>
+        <label>Email<input id="register-email" type="email" required /></label>
+        <label>Password<input id="register-password" type="password" minlength="8" required /></label>
+        <button class="button" type="submit">Create Account</button>
+      </form>
+
+      <p id="login-status" class="status-line">Not authenticated.</p>
+    </main>
+
+    <script src="login.js"></script>
+  </body>
+</html>
