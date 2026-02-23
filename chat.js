@@ -1,101 +1,78 @@
 const chatLog = document.getElementById('chat-log');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
-const clearBtn = document.getElementById('clear-btn');
-const exportBtn = document.getElementById('export-btn');
-const promptWrap = document.getElementById('quick-prompts');
+const statusText = document.getElementById('model-status-text');
 
 const apiCandidates = ['', 'http://127.0.0.1:4173', 'http://localhost:4173'];
-let pollHandle;
+let history = [];
 
-async function postToApi(path, payload) {
+async function requestApi(path, options = {}) {
   for (const base of apiCandidates) {
     try {
-      const res = await fetch(`${base}${path}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const res = await fetch(`${base}${path}`, options);
       if (!res.ok) continue;
       return await res.json();
     } catch {
-      // next
+      // try next
     }
   }
-  throw new Error('api unreachable');
+  throw new Error('API unavailable');
 }
 
-async function getFromApi(path) {
-  for (const base of apiCandidates) {
-    try {
-      const res = await fetch(`${base}${path}`);
-      if (!res.ok) continue;
-      return await res.json();
-    } catch {
-      // next
-    }
-  }
-  throw new Error('api unreachable');
-}
-
-function renderMessages(messages) {
-  chatLog.innerHTML = '';
-  messages.forEach((message) => {
-    const line = document.createElement('p');
-    line.textContent = `${message.sender}: ${message.text}`;
-    chatLog.appendChild(line);
-  });
+function bubble(sender, text, className = '') {
+  const line = document.createElement('div');
+  line.className = `bubble ${className}`.trim();
+  line.innerHTML = `<strong>${sender}</strong><p>${text}</p>`;
+  chatLog.appendChild(line);
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-async function refreshMessages() {
+async function syncMessages() {
   try {
-    const data = await getFromApi('/api/messages');
-    renderMessages(data.messages || []);
+    const data = await requestApi('/api/messages');
+    chatLog.innerHTML = '';
+    (data.messages || []).forEach((m) => bubble(m.sender, m.text, m.sender === 'Client' ? 'user' : 'bot'));
   } catch {
-    renderMessages([{ sender: 'Zenith Bot', text: 'Server offline. Open http://127.0.0.1:4173/chat.html after starting python3 server.py.' }]);
+    bubble('System', 'Server not reachable. Start python3 server.py and open from http://127.0.0.1:4173/chat.html', 'bot');
   }
 }
 
-async function submitMessage(text) {
-  const clean = text.trim();
-  if (!clean) return;
-
-  await postToApi('/api/messages', { sender: 'Client', text: clean });
+async function sendMessage() {
+  const text = chatInput.value.trim();
+  if (!text) return;
   chatInput.value = '';
 
-  const data = await postToApi('/api/chat', { message: clean });
-  await postToApi('/api/messages', { sender: 'Zenith Mini AI', text: data.reply || 'Thanks. We will follow up soon.' });
+  await requestApi('/api/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: 'Client', text }),
+  });
 
-  refreshMessages();
+  statusText.textContent = 'Model Status: Thinking';
+  bubble('Zenith AI', '...', 'bot typing');
+
+  const data = await requestApi('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text, history }),
+  });
+
+  history.push({ role: 'user', content: text }, { role: 'assistant', content: data.reply || '' });
+  statusText.textContent = `Model Status: ${data.status || 'Online'}`;
+
+  await requestApi('/api/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: 'Zenith AI', text: data.reply || 'Thanks, our team will follow up.' }),
+  });
+
+  await syncMessages();
 }
 
-sendBtn.addEventListener('click', () => submitMessage(chatInput.value));
+sendBtn.addEventListener('click', sendMessage);
 chatInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') submitMessage(chatInput.value);
+  if (event.key === 'Enter') sendMessage();
 });
 
-promptWrap.querySelectorAll('[data-prompt]').forEach((button) => {
-  button.addEventListener('click', () => submitMessage(button.dataset.prompt || ''));
-});
-
-clearBtn.addEventListener('click', async () => {
-  await postToApi('/api/messages', { sender: 'System', text: '--- Client started a new thread ---' });
-  refreshMessages();
-});
-
-exportBtn.addEventListener('click', async () => {
-  const data = await getFromApi('/api/messages');
-  const payload = (data.messages || []).map((m) => `${m.sender}: ${m.text}`).join('\n');
-  const blob = new Blob([payload], { type: 'text/plain' });
-  const href = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = href;
-  anchor.download = 'zenith-chat-transcript.txt';
-  anchor.click();
-  URL.revokeObjectURL(href);
-});
-
-refreshMessages();
-pollHandle = setInterval(refreshMessages, 3000);
-window.addEventListener('beforeunload', () => clearInterval(pollHandle));
+syncMessages();
+setInterval(syncMessages, 3500);

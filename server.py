@@ -1,17 +1,21 @@
+import hashlib
 import json
 import re
 import secrets
 import sqlite3
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
+from html import unescape
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / 'database' / 'mini_ai.db'
+
 OWNER_EMAIL = 'owner@zenithlab.dev'
-OWNER_PASSWORD = 'Zenith@2026!'
+OWNER_PASSWORD_HASH = hashlib.sha256('Zenith@2026!'.encode('utf-8')).hexdigest()
 
 ALIASES = {
     'u': 'you',
@@ -25,11 +29,10 @@ ALIASES = {
 }
 
 SEEDED_KNOWLEDGE = [
-    ('what do you do', 'Zenith Lab is a product studio focused on web platforms, real-time systems, and premium digital experiences.'),
-    ('what services do you offer', 'We offer product strategy, UI/UX design, frontend/backend engineering, and launch support.'),
-    ('how do we start', 'We start with a discovery call, then define scope, timeline, and milestones before development.'),
-    ('how long does a project take', 'Most projects run 4 to 12 weeks depending on complexity and integration scope.'),
-    ('what is your tech stack', 'Our stack includes React, Next.js, Node.js, Python, SQL, Unity, and Unreal workflows.'),
+    ('what do you do', 'Zenith Lab delivers AI-native product strategy, design systems, and full-stack engineering.'),
+    ('how does your ai model work', 'Our model blends learned business context, active project memory, and guided responses for reliable client support.'),
+    ('how can we start', 'Start with a discovery call, then we define scope, milestones, and delivery architecture.'),
+    ('what industries do you support', 'We support SaaS, fintech, media, e-commerce, education, and internal enterprise platforms.'),
 ]
 
 
@@ -39,10 +42,13 @@ def now_iso() -> str:
 
 def normalize(text: str) -> str:
     lowered = text.lower().strip()
-    cleaned = re.sub(r"[^a-z0-9\s]", ' ', lowered)
+    cleaned = re.sub(r'[^a-z0-9\s]', ' ', lowered)
     tokens = [ALIASES.get(token, token) for token in cleaned.split()]
-    expanded = ' '.join(tokens)
-    return re.sub(r'\s+', ' ', expanded).strip()
+    return re.sub(r'\s+', ' ', ' '.join(tokens)).strip()
+
+
+def password_hash(value: str) -> str:
+    return hashlib.sha256(value.encode('utf-8')).hexdigest()
 
 
 def token_set(text: str) -> set[str]:
@@ -53,15 +59,48 @@ def similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a, b).ratio()
 
 
+def extract_text_from_url(url: str) -> str:
+    req = Request(url, headers={'User-Agent': 'ZenithLabBot/1.0'})
+    with urlopen(req, timeout=8) as response:
+        html = response.read().decode('utf-8', errors='ignore')
+    stripped = re.sub(r'<script[\s\S]*?</script>', ' ', html, flags=re.I)
+    stripped = re.sub(r'<style[\s\S]*?</style>', ' ', stripped, flags=re.I)
+    stripped = re.sub(r'<[^>]+>', ' ', stripped)
+    text = unescape(re.sub(r'\s+', ' ', stripped)).strip()
+    return text[:2400]
+
+
 def init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              email TEXT UNIQUE NOT NULL,
+              password_hash TEXT NOT NULL,
+              role TEXT NOT NULL DEFAULT 'client',
+              created_at TEXT NOT NULL
+            )
+            '''
+        )
+        conn.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS sessions (
+              token TEXT PRIMARY KEY,
+              user_id INTEGER NOT NULL,
+              created_at TEXT NOT NULL,
+              FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+            '''
+        )
         conn.execute(
             '''
             CREATE TABLE IF NOT EXISTS knowledge (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               question TEXT NOT NULL,
               answer TEXT NOT NULL,
+              source_url TEXT,
               created_at TEXT NOT NULL
             )
             '''
@@ -85,51 +124,135 @@ def init_db() -> None:
             )
             '''
         )
-        conn.execute(
-            '''
-            CREATE TABLE IF NOT EXISTS owner_sessions (
-              token TEXT PRIMARY KEY,
-              created_at TEXT NOT NULL
+
+        owner = conn.execute('SELECT id FROM users WHERE email = ?', (OWNER_EMAIL,)).fetchone()
+        if not owner:
+            conn.execute(
+                'INSERT INTO users(email, password_hash, role, created_at) VALUES (?, ?, ?, ?)',
+                (OWNER_EMAIL, OWNER_PASSWORD_HASH, 'owner', now_iso()),
             )
-            '''
-        )
 
         count = conn.execute('SELECT COUNT(*) FROM knowledge').fetchone()[0]
         if count == 0:
             for question, answer in SEEDED_KNOWLEDGE:
                 conn.execute(
-                    'INSERT INTO knowledge(question, answer, created_at) VALUES (?, ?, ?)',
-                    (normalize(question), answer, now_iso()),
+                    'INSERT INTO knowledge(question, answer, source_url, created_at) VALUES (?, ?, ?, ?)',
+                    (normalize(question), answer, 'seed://zenith', now_iso()),
                 )
 
         conn.commit()
 
 
-def learn(question: str, answer: str) -> None:
+def create_session(user_id: int) -> str:
+    token = secrets.token_urlsafe(32)
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute('INSERT INTO sessions(token, user_id, created_at) VALUES (?, ?, ?)', (token, user_id, now_iso()))
+        conn.commit()
+    return token
+
+
+def delete_session(token: str) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute('DELETE FROM sessions WHERE token = ?', (token,))
+        conn.commit()
+
+
+def session_user(token: str) -> dict | None:
+    if not token:
+        return None
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute(
+            '''
+            SELECT users.id, users.email, users.role
+            FROM sessions
+            JOIN users ON users.id = sessions.user_id
+            WHERE sessions.token = ?
+            ''',
+            (token,),
+        ).fetchone()
+    if not row:
+        return None
+    return {'id': row[0], 'email': row[1], 'role': row[2]}
+
+
+def register_user(email: str, password: str) -> tuple[bool, str]:
+    clean_email = email.strip().lower()
+    if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', clean_email):
+        return False, 'Invalid email format.'
+    if len(password) < 8:
+        return False, 'Password must be at least 8 characters.'
+
+    with sqlite3.connect(DB_PATH) as conn:
+        try:
+            conn.execute(
+                'INSERT INTO users(email, password_hash, role, created_at) VALUES (?, ?, ?, ?)',
+                (clean_email, password_hash(password), 'client', now_iso()),
+            )
+            conn.commit()
+        except sqlite3.IntegrityError:
+            return False, 'Email already registered.'
+    return True, 'Registered successfully.'
+
+
+def login_user(email: str, password: str) -> tuple[bool, dict | str]:
+    clean_email = email.strip().lower()
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute('SELECT id, email, role, password_hash FROM users WHERE email = ?', (clean_email,)).fetchone()
+
+    if not row or row[3] != password_hash(password):
+        return False, 'Invalid credentials.'
+
+    token = create_session(row[0])
+    return True, {'token': token, 'user': {'id': row[0], 'email': row[1], 'role': row[2]}}
+
+
+def list_users() -> list[dict]:
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute('SELECT id, email, role, created_at FROM users ORDER BY id DESC').fetchall()
+    return [{'id': r[0], 'email': r[1], 'role': r[2], 'created_at': r[3]} for r in rows]
+
+
+def delete_user(user_id: int) -> bool:
+    with sqlite3.connect(DB_PATH) as conn:
+        role_row = conn.execute('SELECT role FROM users WHERE id = ?', (user_id,)).fetchone()
+        if not role_row or role_row[0] == 'owner':
+            return False
+        conn.execute('DELETE FROM sessions WHERE user_id = ?', (user_id,))
+        cur = conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        conn.commit()
+        return cur.rowcount > 0
+
+
+def learn(question: str, answer: str, source_url: str = '') -> None:
     q = normalize(question)
     a = answer.strip()
     if not q or not a:
         return
     with sqlite3.connect(DB_PATH) as conn:
-        conn.execute('INSERT INTO knowledge(question, answer, created_at) VALUES (?, ?, ?)', (q, a, now_iso()))
+        conn.execute(
+            'INSERT INTO knowledge(question, answer, source_url, created_at) VALUES (?, ?, ?, ?)',
+            (q, a, source_url.strip(), now_iso()),
+        )
         conn.commit()
+
+
+def list_knowledge() -> list[dict]:
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute('SELECT id, question, answer, source_url, created_at FROM knowledge ORDER BY id DESC').fetchall()
+    return [{'id': r[0], 'question': r[1], 'answer': r[2], 'source_url': r[3] or '', 'created_at': r[4]} for r in rows]
+
+
+def delete_knowledge(item_id: int) -> bool:
+    with sqlite3.connect(DB_PATH) as conn:
+        cur = conn.execute('DELETE FROM knowledge WHERE id = ?', (item_id,))
+        conn.commit()
+        return cur.rowcount > 0
 
 
 def lookup(message: str) -> str | None:
     msg = normalize(message)
     if not msg:
-        return 'Please type a message so I can help.'
-
-    keyword_rules = {
-        'invoice': 'Invoice status: two paid and one pending review. I can send the full breakdown.',
-        'milestone': 'Current milestone status: Discovery complete, Prototype complete, Build in progress.',
-        'proposal': 'I can prepare a proposal after a short discovery call and requirements summary.',
-        'hello': 'Hello. I am Zenith Mini AI, your studio assistant for project questions.',
-    }
-
-    for key, value in keyword_rules.items():
-        if key in msg:
-            return value
+        return 'Please enter a message so I can assist.'
 
     with sqlite3.connect(DB_PATH) as conn:
         rows = conn.execute('SELECT question, answer FROM knowledge ORDER BY id DESC').fetchall()
@@ -141,18 +264,14 @@ def lookup(message: str) -> str | None:
     for question, answer in rows:
         if question in msg or msg in question:
             return answer
-
-        q_tokens = token_set(question)
-        overlap_ratio = len(msg_tokens & q_tokens) / max(len(q_tokens), 1)
-        score = max(similarity(msg, question), overlap_ratio)
-
+        overlap = len(msg_tokens & token_set(question)) / max(len(token_set(question)), 1)
+        score = max(similarity(msg, question), overlap)
         if score > best_score:
             best_score = score
             best_answer = answer
 
-    if best_answer and best_score >= 0.62:
+    if best_answer and best_score >= 0.58:
         return best_answer
-
     return None
 
 
@@ -166,19 +285,6 @@ def list_messages() -> list[dict]:
     with sqlite3.connect(DB_PATH) as conn:
         rows = conn.execute('SELECT id, sender, text, created_at FROM messages ORDER BY id ASC').fetchall()
     return [{'id': r[0], 'sender': r[1], 'text': r[2], 'created_at': r[3]} for r in rows]
-
-
-def list_knowledge() -> list[dict]:
-    with sqlite3.connect(DB_PATH) as conn:
-        rows = conn.execute('SELECT id, question, answer, created_at FROM knowledge ORDER BY id DESC').fetchall()
-    return [{'id': r[0], 'question': r[1], 'answer': r[2], 'created_at': r[3]} for r in rows]
-
-
-def delete_knowledge(item_id: int) -> bool:
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.execute('DELETE FROM knowledge WHERE id = ?', (item_id,))
-        conn.commit()
-        return cur.rowcount > 0
 
 
 def get_setting(key: str, default: str = '') -> str:
@@ -196,22 +302,6 @@ def set_setting(key: str, value: str) -> None:
         conn.commit()
 
 
-def create_owner_session() -> str:
-    token = secrets.token_urlsafe(24)
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute('INSERT INTO owner_sessions(token, created_at) VALUES (?, ?)', (token, now_iso()))
-        conn.commit()
-    return token
-
-
-def is_owner_token(token: str) -> bool:
-    if not token:
-        return False
-    with sqlite3.connect(DB_PATH) as conn:
-        row = conn.execute('SELECT token FROM owner_sessions WHERE token = ?', (token,)).fetchone()
-    return row is not None
-
-
 class Handler(SimpleHTTPRequestHandler):
     def _send_json(self, status: int, payload: dict | list) -> None:
         body = json.dumps(payload).encode('utf-8')
@@ -221,88 +311,131 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _owner_token(self) -> str:
+    def _session_token(self) -> str:
         auth = self.headers.get('Authorization', '')
         if auth.startswith('Bearer '):
-            return auth.replace('Bearer ', '', 1).strip()
+            return auth[7:].strip()
         return ''
 
-    def _require_owner(self) -> bool:
-        if is_owner_token(self._owner_token()):
-            return True
-        self._send_json(401, {'error': 'owner authentication required'})
-        return False
+    def _require_user(self) -> dict | None:
+        user = session_user(self._session_token())
+        if user:
+            return user
+        self._send_json(401, {'error': 'authentication required'})
+        return None
+
+    def _require_owner(self) -> dict | None:
+        user = session_user(self._session_token())
+        if user and user['role'] == 'owner':
+            return user
+        self._send_json(403, {'error': 'owner access required'})
+        return None
+
+    def _read_payload(self) -> dict:
+        length = int(self.headers.get('Content-Length', '0'))
+        raw = self.rfile.read(length).decode('utf-8') if length else '{}'
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path == '/api/messages':
+        path = parsed.path
+
+        if path == '/api/auth/session':
+            user = session_user(self._session_token())
+            self._send_json(200, {'authenticated': bool(user), 'user': user})
+            return
+
+        if path == '/api/messages':
             self._send_json(200, {'messages': list_messages()})
             return
-        if parsed.path == '/api/knowledge':
+
+        if path == '/api/knowledge':
             if not self._require_owner():
                 return
             self._send_json(200, {'items': list_knowledge()})
             return
-        if parsed.path == '/api/settings':
+
+        if path == '/api/settings':
             self._send_json(200, {'announcement': get_setting('announcement')})
             return
-        if parsed.path == '/api/owner/verify':
-            self._send_json(200, {'ok': is_owner_token(self._owner_token())})
+
+        if path == '/api/admin/users':
+            if not self._require_owner():
+                return
+            self._send_json(200, {'users': list_users()})
             return
+
+        if path == '/api/admin/analytics':
+            if not self._require_owner():
+                return
+            with sqlite3.connect(DB_PATH) as conn:
+                total_users = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+                total_messages = conn.execute('SELECT COUNT(*) FROM messages').fetchone()[0]
+                total_knowledge = conn.execute('SELECT COUNT(*) FROM knowledge').fetchone()[0]
+            self._send_json(200, {'total_users': total_users, 'total_messages': total_messages, 'total_knowledge': total_knowledge})
+            return
+
         super().do_GET()
 
     def do_DELETE(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path != '/api/knowledge':
-            self._send_json(404, {'error': 'Not found'})
-            return
-        if not self._require_owner():
+        if parsed.path == '/api/knowledge':
+            if not self._require_owner():
+                return
+            params = parse_qs(parsed.query)
+            item_id = params.get('id', [''])[0]
+            if not item_id.isdigit():
+                self._send_json(400, {'error': 'valid id required'})
+                return
+            self._send_json(200, {'ok': delete_knowledge(int(item_id))})
             return
 
-        params = parse_qs(parsed.query)
-        item_id = params.get('id', [''])[0]
-        if not item_id.isdigit():
-            self._send_json(400, {'error': 'valid id required'})
+        if parsed.path == '/api/admin/users':
+            if not self._require_owner():
+                return
+            params = parse_qs(parsed.query)
+            item_id = params.get('id', [''])[0]
+            if not item_id.isdigit():
+                self._send_json(400, {'error': 'valid id required'})
+                return
+            self._send_json(200, {'ok': delete_user(int(item_id))})
             return
 
-        self._send_json(200, {'ok': delete_knowledge(int(item_id))})
+        self._send_json(404, {'error': 'Not found'})
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path not in ('/api/chat', '/api/teach', '/api/messages', '/api/settings', '/api/owner/login'):
-            self._send_json(404, {'error': 'Not found'})
-            return
+        payload = self._read_payload()
+        path = parsed.path
 
-        length = int(self.headers.get('Content-Length', '0'))
-        raw = self.rfile.read(length).decode('utf-8') if length else '{}'
-        try:
-            payload = json.loads(raw)
-        except json.JSONDecodeError:
-            self._send_json(400, {'error': 'Invalid JSON body'})
-            return
-
-        if parsed.path == '/api/owner/login':
-            email = str(payload.get('email', '')).strip().lower()
-            password = str(payload.get('password', ''))
-            if email == OWNER_EMAIL and password == OWNER_PASSWORD:
-                self._send_json(200, {'ok': True, 'token': create_owner_session()})
+        if path == '/api/auth/register':
+            ok, result = register_user(str(payload.get('email', '')), str(payload.get('password', '')))
+            if ok:
+                self._send_json(200, {'ok': True, 'message': result})
             else:
-                self._send_json(401, {'error': 'invalid owner credentials'})
+                self._send_json(400, {'error': result})
             return
 
-        if parsed.path == '/api/teach':
-            if not self._require_owner():
+        if path == '/api/auth/login':
+            ok, result = login_user(str(payload.get('email', '')), str(payload.get('password', '')))
+            if ok:
+                self._send_json(200, result)
+            else:
+                self._send_json(401, {'error': result})
+            return
+
+        if path == '/api/auth/logout':
+            user = self._require_user()
+            if not user:
                 return
-            question = str(payload.get('question', ''))
-            answer = str(payload.get('answer', ''))
-            if not question.strip() or not answer.strip():
-                self._send_json(400, {'error': 'question and answer are required'})
-                return
-            learn(question, answer)
+            delete_session(self._session_token())
             self._send_json(200, {'ok': True})
             return
 
-        if parsed.path == '/api/messages':
+        if path == '/api/messages':
             sender = str(payload.get('sender', '')).strip() or 'Unknown'
             text = str(payload.get('text', '')).strip()
             if not text:
@@ -312,7 +445,53 @@ class Handler(SimpleHTTPRequestHandler):
             self._send_json(200, {'ok': True})
             return
 
-        if parsed.path == '/api/settings':
+        if path == '/api/chat':
+            message = str(payload.get('message', '')).strip()
+            history = payload.get('history', [])
+            learned = lookup(message)
+            if learned:
+                self._send_json(200, {'reply': learned, 'status': 'Trained'})
+                return
+            if history:
+                self._send_json(200, {'reply': 'Thanks for the context. Based on this thread, I recommend a short strategy call so we can scope priorities and estimate delivery precisely.', 'status': 'Thinking'})
+                return
+            self._send_json(200, {'reply': 'Great question. I can help with product planning, architecture, and delivery strategy. Share your goals and timeline to get a tailored plan.', 'status': 'Online'})
+            return
+
+        if path == '/api/teach':
+            if not self._require_owner():
+                return
+            question = str(payload.get('question', '')).strip()
+            answer = str(payload.get('answer', '')).strip()
+            if not question or not answer:
+                self._send_json(400, {'error': 'question and answer are required'})
+                return
+            learn(question, answer, source_url='manual://owner')
+            self._send_json(200, {'ok': True})
+            return
+
+        if path == '/api/admin/train-url':
+            if not self._require_owner():
+                return
+            url = str(payload.get('url', '')).strip()
+            if not url.startswith('http://') and not url.startswith('https://'):
+                self._send_json(400, {'error': 'valid url required'})
+                return
+            try:
+                extracted = extract_text_from_url(url)
+            except Exception:
+                self._send_json(502, {'error': 'failed to fetch url'})
+                return
+
+            snippet = extracted[:420]
+            if not snippet:
+                self._send_json(400, {'error': 'empty content extracted'})
+                return
+            learn(f'source summary {url}', f'Context from {url}: {snippet}', source_url=url)
+            self._send_json(200, {'ok': True, 'summary': snippet})
+            return
+
+        if path == '/api/settings':
             if not self._require_owner():
                 return
             announcement = str(payload.get('announcement', '')).strip()
@@ -320,9 +499,7 @@ class Handler(SimpleHTTPRequestHandler):
             self._send_json(200, {'ok': True, 'announcement': announcement})
             return
 
-        message = str(payload.get('message', ''))
-        learned = lookup(message)
-        self._send_json(200, {'reply': learned or 'Thank you for your message. An owner will follow up with a tailored response shortly.'})
+        self._send_json(404, {'error': 'Not found'})
 
 
 if __name__ == '__main__':

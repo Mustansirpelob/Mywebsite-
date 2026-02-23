@@ -3,59 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zenith Lab | Owner Access</title>
+    <title>Zenith Lab | Owner Dashboard</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="animated-sky-scene" aria-hidden="true">
-      <div class="cloud cloud--1"></div>
-      <div class="cloud cloud--2"></div>
-      <div class="cloud cloud--3"></div>
-      <div class="scene-ground"></div>
-    </div>
-    <main class="page-shell narrow owner-shell">
-      <p class="eyebrow">Owner Access</p>
-      <h1>Website Control Panel</h1>
-      <p class="hero-subtext">Sign in with owner Gmail + password to edit studio content.</p>
+    <div class="bg-gradient" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-      <form id="owner-login-form" class="panel form-grid">
-        <label>Owner Gmail<input id="owner-email" type="email" placeholder="owner@zenithlab.dev" required /></label>
-        <label>Password<input id="owner-password" type="password" placeholder="••••••••" required /></label>
-        <button class="button" type="submit">Sign In as Owner</button>
-      </form>
+    <header class="site-header glass">
+      <a class="brand" href="index.html">Zenith Lab</a>
+      <nav class="main-nav"><a href="index.html">Home</a><a href="chat.html">Workspace</a></nav>
+    </header>
 
-      <section id="owner-console" class="owner-console" hidden>
-        <section class="panel">
-          <h3>Live Client Conversation</h3>
-          <section class="chat-log" id="owner-chat-log"></section>
-          <div class="chat-controls">
-            <input id="owner-reply" type="text" placeholder="Reply as Owner" />
-            <button id="owner-send" type="button">Send Reply</button>
-          </div>
+    <main class="page-shell reveal is-visible">
+      <div id="owner-guard" class="glass panel">
+        <h1>Owner access required</h1>
+        <p>Login using owner Gmail/password from the authentication page.</p>
+        <a class="button" href="login.html">Go to Login</a>
+      </div>
+
+      <section id="owner-console" hidden>
+        <div class="section-heading"><p class="eyebrow">Owner Dashboard</p><h1>Control Center</h1></div>
+
+        <div class="feature-grid">
+          <article class="glass card"><h3>Total Users</h3><p id="metric-users">-</p></article>
+          <article class="glass card"><h3>Total Messages</h3><p id="metric-messages">-</p></article>
+          <article class="glass card"><h3>Knowledge Entries</h3><p id="metric-knowledge">-</p></article>
+        </div>
+
+        <section class="glass panel">
+          <h3>User Management</h3>
+          <ul id="user-list" class="owner-list"></ul>
         </section>
 
-        <section class="panel teach-panel">
-          <h3>AI Knowledge Manager</h3>
+        <section class="glass panel">
+          <h3>AI Training Panel</h3>
           <div class="teach-grid">
-            <input id="owner-question" type="text" placeholder="Question to learn" />
+            <input id="owner-question" type="text" placeholder="Question" />
             <input id="owner-answer" type="text" placeholder="Answer" />
-            <button id="owner-teach" class="mini-button" type="button">Add</button>
+            <button id="owner-teach" class="button" type="button">Teach</button>
+          </div>
+          <div class="teach-grid">
+            <input id="train-url" type="url" placeholder="https://example.com/article" />
+            <button id="train-url-btn" class="button subtle" type="button">Train from URL</button>
           </div>
           <ul id="knowledge-list" class="owner-list"></ul>
         </section>
 
-        <section class="panel teach-panel">
-          <h3>Homepage Announcement</h3>
+        <section class="glass panel">
+          <h3>Homepage Content</h3>
           <div class="teach-grid">
-            <input id="announcement-input" type="text" placeholder="Type announcement shown on homepage" />
-            <button id="save-announcement" class="mini-button" type="button">Save</button>
+            <input id="announcement-input" type="text" placeholder="Announcement text" />
+            <button id="save-announcement" class="button" type="button">Save</button>
           </div>
-          <button id="owner-logout" class="mini-button" type="button">Log Out</button>
+          <button id="owner-logout" class="button subtle" type="button">Logout</button>
         </section>
       </section>
 
-      <p id="owner-status" class="status-line">Owner not authenticated.</p>
+      <p id="owner-status" class="status-line">Checking authentication...</p>
     </main>
+
     <script src="owner.js"></script>
   </body>
 </html>

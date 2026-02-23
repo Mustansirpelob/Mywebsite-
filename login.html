@@ -3,46 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zenith Lab | Login</title>
+    <title>Zenith Lab | Authentication</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="animated-sky-scene" aria-hidden="true">
-      <div class="cloud cloud--1"></div>
-      <div class="cloud cloud--2"></div>
-      <div class="cloud cloud--3"></div>
-      <div class="scene-ground"></div>
-    </div>
-    <header class="site-header"><a class="brand" href="index.html">Zenith Lab</a><nav><a href="index.html">Home</a><a href="shop.html">Shop</a><a href="chat.html">Chat</a></nav></header>
-    <main class="page-shell narrow">
-      <p class="eyebrow">Secure Workspace</p>
-      <h1>Client Login</h1>
-      <p class="hero-subtext">Sign in to view milestones, files, and billing updates.</p>
+    <div class="bg-gradient" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-      <form id="login-form" class="panel form-grid">
-        <label>
-          Email
-          <input id="email" name="email" type="email" placeholder="client@company.com" required />
-        </label>
-        <label>
-          Password
-          <input id="password" name="password" type="password" minlength="8" placeholder="••••••••" required />
-        </label>
-        <label class="inline-check">
-          <input id="remember" name="remember" type="checkbox" />
-          Keep me signed in on this device
-        </label>
+    <header class="site-header glass">
+      <a class="brand" href="index.html">Zenith Lab</a>
+      <nav class="main-nav"><a href="index.html">Home</a><a href="chat.html">AI Workspace</a></nav>
+    </header>
+
+    <main class="page-shell narrow reveal is-visible">
+      <p class="eyebrow">Authentication</p>
+      <h1>Secure account access</h1>
+      <p class="hero-subtext">Clients can register/login. Owner uses dedicated Gmail and password with role-based dashboard access.</p>
+
+      <div class="auth-tabs">
+        <button id="show-login" class="button subtle" type="button">Login</button>
+        <button id="show-register" class="button subtle" type="button">Register</button>
+      </div>
+
+      <form id="login-form" class="glass form-grid">
+        <label>Email<input id="login-email" type="email" required /></label>
+        <label>Password<input id="login-password" type="password" minlength="8" required /></label>
         <button class="button" type="submit">Sign In</button>
       </form>
 
-      <div id="session-panel" class="panel session-panel" hidden>
-        <h3>Active Session</h3>
-        <p id="session-summary"></p>
-        <button id="logout-btn" class="mini-button" type="button">Log Out</button>
-      </div>
+      <form id="register-form" class="glass form-grid" hidden>
+        <label>Email<input id="register-email" type="email" required /></label>
+        <label>Password<input id="register-password" type="password" minlength="8" required /></label>
+        <button class="button" type="submit">Create Account</button>
+      </form>
 
       <p id="login-status" class="status-line">Not authenticated.</p>
     </main>
+
     <script src="login.js"></script>
   </body>
 </html>
