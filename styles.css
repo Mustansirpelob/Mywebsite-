@@ -11,6 +11,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
@@ -27,9 +28,9 @@ a { color: inherit; text-decoration: none; }
 .particles { position: fixed; inset: 0; pointer-events: none; z-index: -3; }
 .bg-gradient {
   background:
-    radial-gradient(circle at 12% 20%, rgba(127, 141, 255, 0.26), transparent 30%),
-    radial-gradient(circle at 85% 15%, rgba(127, 75, 255, 0.2), transparent 35%),
-    linear-gradient(150deg, #05070f 20%, #0c1430 56%, #070812 100%);
+    linear-gradient(rgba(4, 7, 16, 0.58), rgba(4, 7, 16, 0.72)),
+    url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=1900&q=80') center/cover no-repeat fixed;
+  filter: saturate(1.05) contrast(1.02);
 }
 .bg-grid {
   z-index: -2;
@@ -71,7 +72,7 @@ a { color: inherit; text-decoration: none; }
   z-index: 10;
 }
 .brand { font-weight: 800; letter-spacing: .02em; }
-.main-nav { display: flex; gap: 1rem; }
+.main-nav { display: flex; gap: 1rem; flex-wrap: wrap; }
 .main-nav a { color: var(--muted); transition: color .3s; }
 .main-nav a:hover { color: var(--text); }
 
@@ -84,7 +85,7 @@ a { color: inherit; text-decoration: none; }
 
 main { width: min(1100px, calc(100% - 2rem)); margin: 0 auto 5rem; }
 .section { margin: 5rem 0; }
-.hero { padding: 5.5rem 1rem 2rem; max-width: 760px; }
+.hero { padding: 5.5rem 1rem 2rem; max-width: 860px; }
 h1 { font-size: clamp(2rem, 6vw, 4.2rem); line-height: 1.1; margin: 0 0 1rem; }
 h2 { font-size: clamp(1.5rem, 3vw, 2.4rem); margin: 0; }
 .eyebrow { text-transform: uppercase; letter-spacing: .14em; color: #c7ceff; font-size: .76rem; }
@@ -106,7 +107,7 @@ h2 { font-size: clamp(1.5rem, 3vw, 2.4rem); margin: 0; }
 
 .section-heading { margin-bottom: 1.3rem; display: grid; gap: .4rem; }
 .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-.card, .panel, .ai-preview, .cta-box { border-radius: 18px; padding: 1.1rem; }
+.card, .panel, .cta-box { border-radius: 18px; padding: 1.1rem; }
 .card h3 { margin-top: .2rem; }
 .card:hover { border-color: rgba(178, 189, 255, .38); transform: translateY(-3px); transition: .3s; }
 
