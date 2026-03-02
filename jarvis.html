@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jarvis Mobile Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #090d1c;
+        --panel: rgba(14, 20, 41, 0.85);
+        --line: rgba(161, 177, 255, 0.25);
+        --text: #ecf1ff;
+        --muted: #a7b0da;
+        --accent: #7287ff;
+        --accent-2: #9f7bff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, system-ui, sans-serif;
+        background: radial-gradient(circle at top, #1a2461 0%, #090d1c 40%, #05080f 100%);
+        color: var(--text);
+        padding: 1rem;
+      }
+      .app {
+        width: min(680px, 100%);
+        margin: 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--panel);
+        backdrop-filter: blur(12px);
+        padding: 1rem;
+      }
+      h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); margin: 0 0 .5rem; }
+      p { color: var(--muted); margin: 0; }
+      .row { display: grid; gap: .7rem; margin-top: .9rem; }
+      .toolbar { display: flex; gap: .6rem; flex-wrap: wrap; }
+      button, input {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: .65rem .8rem;
+        background: rgba(6, 10, 22, .9);
+        color: var(--text);
+        font: inherit;
+      }
+      button { cursor: pointer; background: linear-gradient(125deg, var(--accent), var(--accent-2)); border: none; }
+      button.secondary { background: rgba(11, 16, 34, .9); border: 1px solid var(--line); }
+      .log {
+        min-height: 210px;
+        max-height: 45vh;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: .8rem;
+        background: rgba(8, 12, 26, .8);
+      }
+      .log p { margin: 0 0 .6rem; }
+      .tip { font-size: .86rem; }
+      @media (max-width: 640px) { .toolbar { display: grid; grid-template-columns: 1fr 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <h1>Jarvis AI (Mobile Web)</h1>
+      <p>Voice assistant that can listen, run commands, type text, speak back, and open apps/videos using safe links.</p>
+
+      <section class="row">
+        <div class="toolbar">
+          <button id="start-listen">🎙️ Start listening</button>
+          <button id="stop-listen" class="secondary">Stop</button>
+          <button id="speak-now" class="secondary">🔊 Say "Hello boss"</button>
+        </div>
+        <input id="manual-command" placeholder="Type command (e.g., open instagram, play video cats, type hello)" />
+        <div class="toolbar">
+          <button id="run-command">Run command</button>
+          <button id="clear-log" class="secondary">Clear log</button>
+        </div>
+      </section>
+
+      <section class="row">
+        <div class="log" id="log"></div>
+        <p class="tip">Examples: "open instagram", "message @username hello", "play video jarvis ai", "type I am on my way", "say I am ready".</p>
+        <p class="tip">Note: browsers cannot auto-send DMs/messages for security. Jarvis opens the target app/page with prefilled text where possible.</p>
+      </section>
+    </main>
+    <script src="jarvis.js"></script>
+  </body>
+</html>
